@@ -83,10 +83,18 @@ jobs:
         run: |
           QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
           if [ $BUILD_STATUS -ne 0 ]; then
-            echo "❌ Compile failed! All error lines:"
+            echo "❌ Compile failed!"
+            echo "## ❌ Compile Errors" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -n " error:" /tmp/compile.log >> $GITHUB_STEP_SUMMARY || true
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "--- Last 100 lines ---" >> $GITHUB_STEP_SUMMARY
+            tail -100 /tmp/compile.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "--- Compile errors (stdout) ---"
             grep -n " error:" /tmp/compile.log || true
-            echo "--- Last 150 lines of compile log ---"
-            tail -150 /tmp/compile.log
+            echo "--- Last 100 lines ---"
+            tail -100 /tmp/compile.log
             exit $BUILD_STATUS
           fi
           echo "✅ Qt5 XCB compile succeeded"
