@@ -83,11 +83,22 @@ jobs:
         run: |
           QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
           if [ $BUILD_STATUS -ne 0 ]; then
-            echo "❌ Compile failed! First errors:"
-            grep -n " error:" /tmp/compile.log | head -20
+            echo "❌ Compile failed! All error lines:"
+            grep -n " error:" /tmp/compile.log || true
+            echo "--- Last 150 lines of compile log ---"
+            tail -150 /tmp/compile.log
             exit $BUILD_STATUS
           fi
           echo "✅ Qt5 XCB compile succeeded"
+
+      - name: Upload compile log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt5platform-plugins-compile-log
+          path: /tmp/compile.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Build qt5platform-plugins deb packages
         run: |
