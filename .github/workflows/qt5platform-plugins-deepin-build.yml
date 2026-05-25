@@ -50,12 +50,44 @@ jobs:
           echo "=== Qt5 XCB header versioned dirs ==="
           find /usr/include -path "*/QtXcb/*" -type d 2>/dev/null | head -10 || true
 
-      - name: Test cmake configure
+      - name: Check if Qt5 XCB private headers exist at system path
+        run: |
+          QT5_VER=$(pkg-config --modversion Qt5Core 2>/dev/null || echo "unknown")
+          QT5_INCDIR=$(pkg-config --variable=includedir Qt5Core 2>/dev/null || echo "")
+          echo "Qt5 version: $QT5_VER"
+          echo "Qt5 include dir: $QT5_INCDIR"
+          XCBPATH="${QT5_INCDIR}/QtXcb/${QT5_VER}/QtXcb/private"
+          echo "Expected XCB header path: $XCBPATH"
+          if [ -d "$XCBPATH" ]; then
+            echo "✅ System Qt5 XCB private headers FOUND at: $XCBPATH"
+          else
+            echo "❌ System Qt5 XCB private headers NOT found at: $XCBPATH"
+            BUNDLED="xcb/libqt5xcbqpa-dev/${QT5_VER}"
+            if [ -d "$BUNDLED" ]; then
+              echo "✅ Bundled headers found at: $BUNDLED"
+            else
+              echo "❌ Bundled headers also NOT found for version $QT5_VER"
+              echo "Available bundled versions:"
+              ls xcb/libqt5xcbqpa-dev/ | tail -5
+              exit 1
+            fi
+          fi
+
+      - name: Test cmake configure (strict - fail on error)
         run: |
           mkdir -p /tmp/test_build5
-          QT_SELECT=qt5 cmake -S . -B /tmp/test_build5 -DBUILD_TESTING=OFF -DDTK5=ON 2>&1 | tee /tmp/cmake_configure.log || true
-          echo "=== cmake configure result: $? ==="
-          grep -i "error:\|FATAL_ERROR\|Not support\|Qt.*version\|Qt5_VERSION\|Qt5Core_INCLUDE_DIRS" /tmp/cmake_configure.log | head -20 || true
+          QT_SELECT=qt5 cmake -S . -B /tmp/test_build5 -DBUILD_TESTING=OFF -DDTK5=ON 2>&1 | tee /tmp/cmake_configure.log
+          echo "✅ cmake configure succeeded"
+
+      - name: Test compile Qt5 XCB (catch compile errors early)
+        run: |
+          QT_SELECT=qt5 cmake --build /tmp/test_build5 --target qt5platform-xcb-dri3 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
+          if [ $BUILD_STATUS -ne 0 ]; then
+            echo "❌ Compile failed! First errors:"
+            grep -n " error:" /tmp/compile.log | head -20
+            exit $BUILD_STATUS
+          fi
+          echo "✅ Qt5 XCB compile succeeded"
 
       - name: Build qt5platform-plugins deb packages
         run: |
