@@ -81,7 +81,7 @@ jobs:
 
       - name: Test compile Qt5 XCB (catch compile errors early)
         run: |
-          QT_SELECT=qt5 cmake --build /tmp/test_build5 --target qt5platform-xcb-dri3 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
+          QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Compile failed! First errors:"
             grep -n " error:" /tmp/compile.log | head -20
