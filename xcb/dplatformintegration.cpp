@@ -69,13 +69,13 @@
 D_DECLARE_PRIVATE_MEMBER(QXcbIntegration_m_wmClass, QXcbIntegration, m_wmClass, QByteArray);
 D_DECLARE_PRIVATE_MEMBER(QXcbCursor_m_screen, QXcbCursor, m_screen, QXcbScreen *);
 D_DECLARE_AUTO_PRIVATE_MEMBER_TAG(QXcbCursor_m_cursorHash, QXcbCursor, m_cursorHash);
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
 D_DECLARE_PRIVATE_MEMBER(QXcbCursor_m_gtkCursorThemeInitialized, QXcbCursor, m_gtkCursorThemeInitialized, bool);
 #endif
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
 D_DECLARE_PRIVATE_MEMBER(QXcbCursor_m_callbackForPropertyRegistered, QXcbCursor, m_callbackForPropertyRegistered, bool);
 #endif
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
 D_DECLARE_PRIVATE_MEMBER(QXcbCursor_m_cursorContext, QXcbCursor, m_cursorContext, xcb_cursor_context_t *);
 #endif
 #include "qxcbclipboard.h"
@@ -902,12 +902,8 @@ static bool updateCursorTheme(void *dpy)
         // special case for non-standard dnd-* cursors
         cursor = loadCursor(dpy, cshape);
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        if (!cursor
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
-            && !D_PRIVATE_MEMBER(*xcb_cursor, QXcbCursor_m_callbackForPropertyRegistered{})
-#endif
-        ) {
+        if (!cursor && !D_PRIVATE_MEMBER(*xcb_cursor, QXcbCursor_m_callbackForPropertyRegistered{})) {
 #else
         if (!cursor && !D_PRIVATE_MEMBER(*xcb_cursor, QXcbCursor_m_gtkCursorThemeInitialized{})) {
 #endif
@@ -1098,9 +1094,9 @@ static void cursorThemePropertyChanged(xcb_connection_t *connection, const QByte
             }
             D_AUTO_PRIVATE_MEMBER(*xcb_cursor, QXcbCursor_m_cursorHash).clear();
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
             // source from: QXCBCursor::updateContext()
-            // Note: m_cursorContext only exists in Qt6
+            // Note: m_cursorContext only exists in Qt6 >= 6.6.0
             if (D_PRIVATE_MEMBER(*xcb_cursor, QXcbCursor_m_cursorContext{})) {
                 xcb_cursor_context_free(D_PRIVATE_MEMBER(*xcb_cursor, QXcbCursor_m_cursorContext{}));
             }
