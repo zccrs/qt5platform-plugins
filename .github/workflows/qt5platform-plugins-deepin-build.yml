@@ -37,12 +37,22 @@ jobs:
           set -euxo pipefail
           mk-build-deps --install --remove --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control
 
+      - name: Show environment info
+        run: |
+          echo "=== Qt5 version ===" && (dpkg -l qtbase5-dev 2>/dev/null | tail -1 || echo "Qt5 dev not found") || true
+          echo "=== Qt6 version ===" && (dpkg -l qt6-base-dev 2>/dev/null | tail -1 || echo "Qt6 dev not found") || true
+          dpkg -l libqt5xcbqpa-dev 2>/dev/null | tail -2 || echo "libqt5xcbqpa-dev not installed"
+          dpkg -l libqt6xcbqpa-dev 2>/dev/null | tail -2 || echo "libqt6xcbqpa-dev not installed"
+          find /usr -name "qxcbcursor.h" 2>/dev/null | head -5 || true
+
       - name: Build qt5platform-plugins deb packages
         run: |
           dpkg-buildpackage -uc -us -b 2>&1 | tee /tmp/build.log; BUILD_STATUS=${PIPESTATUS[0]}
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Build failed! Last 200 lines of build log:"
-            tail -200 /tmp/build.log
+            grep -n "error:\|Error:\|FAILED\|fatal error" /tmp/build.log | head -30 || true
+            echo "--- Last 300 lines ---"
+            tail -300 /tmp/build.log
             exit $BUILD_STATUS
           fi
           echo "✅ qt5platform-plugins deb packages built successfully!"
