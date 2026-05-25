@@ -41,9 +41,14 @@ jobs:
         run: |
           echo "=== Qt5 version ===" && (dpkg -l qtbase5-dev 2>/dev/null | tail -1 || echo "Qt5 dev not found") || true
           echo "=== Qt6 version ===" && (dpkg -l qt6-base-dev 2>/dev/null | tail -1 || echo "Qt6 dev not found") || true
+          echo "=== libqt5xcbqpa-dev ==="
           dpkg -l libqt5xcbqpa-dev 2>/dev/null | tail -2 || echo "libqt5xcbqpa-dev not installed"
-          dpkg -l libqt6xcbqpa-dev 2>/dev/null | tail -2 || echo "libqt6xcbqpa-dev not installed"
-          find /usr -name "qxcbcursor.h" 2>/dev/null | head -5 || true
+          echo "=== Qt5 XCB private headers search ==="
+          find /usr/include -name "qxcbcursor_p.h" -o -name "qxcbintegration_p.h" 2>/dev/null | head -5 || true
+          echo "=== Qt5Core_INCLUDE_DIRS candidate ==="
+          pkg-config --variable=includedir Qt5Core 2>/dev/null || true
+          echo "=== Qt5 XCB header versioned dirs ==="
+          find /usr/include -path "*/QtXcb/*" -type d 2>/dev/null | head -10 || true
 
       - name: Test cmake configure
         run: |
