@@ -45,6 +45,13 @@ jobs:
           dpkg -l libqt6xcbqpa-dev 2>/dev/null | tail -2 || echo "libqt6xcbqpa-dev not installed"
           find /usr -name "qxcbcursor.h" 2>/dev/null | head -5 || true
 
+      - name: Test cmake configure
+        run: |
+          mkdir -p /tmp/test_build5
+          QT_SELECT=qt5 cmake -S . -B /tmp/test_build5 -DBUILD_TESTING=OFF -DDTK5=ON 2>&1 | tee /tmp/cmake_configure.log || true
+          echo "=== cmake configure result: $? ==="
+          grep -i "error:\|FATAL_ERROR\|Not support\|Qt.*version\|Qt5_VERSION\|Qt5Core_INCLUDE_DIRS" /tmp/cmake_configure.log | head -20 || true
+
       - name: Build qt5platform-plugins deb packages
         run: |
           dpkg-buildpackage -uc -us -b 2>&1 | tee /tmp/build.log; BUILD_STATUS=${PIPESTATUS[0]}
