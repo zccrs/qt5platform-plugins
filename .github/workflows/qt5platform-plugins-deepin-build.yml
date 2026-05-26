@@ -108,9 +108,10 @@ jobs:
             grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log || true
             echo "--- Last 100 lines ---"
             tail -100 /tmp/compile.log
-            exit $BUILD_STATUS
+            echo "::warning::Early Qt5 compile probe failed; continuing to dpkg-buildpackage for the authoritative build result."
+          else
+            echo "✅ Qt5 XCB compile succeeded"
           fi
-          echo "✅ Qt5 XCB compile succeeded"
 
       - name: Upload compile log on failure
         if: failure()
@@ -123,7 +124,10 @@ jobs:
 
       - name: Build qt5platform-plugins deb packages
         run: |
-          DEB_BUILD_OPTIONS=parallel=2 dpkg-buildpackage -uc -us -b 2>&1 | tee /tmp/build.log; BUILD_STATUS=${PIPESTATUS[0]}
+          set +e
+          DEB_BUILD_OPTIONS=parallel=2 dpkg-buildpackage -uc -us -b 2>&1 | tee /tmp/build.log
+          BUILD_STATUS=${PIPESTATUS[0]}
+          set -e
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Build failed! Last 200 lines of build log:"
             grep -n "error:\|Error:\|FAILED\|fatal error" /tmp/build.log | head -30 || true
