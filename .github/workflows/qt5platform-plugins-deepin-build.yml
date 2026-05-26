@@ -82,9 +82,11 @@ jobs:
       - name: Test compile Qt5 XCB (catch compile errors early)
         run: |
           set +e
+          set +o pipefail
           QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j2 2>&1 | tee /tmp/compile.log
           BUILD_STATUS=${PIPESTATUS[0]}
           set -e
+          set -o pipefail
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Compile failed!"
             echo "::warning::Early Qt5 compile probe failed; continuing to dpkg-buildpackage for the authoritative build result."
@@ -104,9 +106,11 @@ jobs:
       - name: Build qt5platform-plugins deb packages
         run: |
           set +e
+          set +o pipefail
           DEB_BUILD_OPTIONS=parallel=2 dpkg-buildpackage -uc -us -b 2>&1 | tee /tmp/build.log
           BUILD_STATUS=${PIPESTATUS[0]}
           set -e
+          set -o pipefail
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Build failed! Last 200 lines of build log:"
             grep -n "error:\|Error:\|FAILED\|fatal error" /tmp/build.log | head -30 || true
