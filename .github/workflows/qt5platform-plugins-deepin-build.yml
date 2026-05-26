@@ -84,21 +84,25 @@ jobs:
           QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Compile failed!"
-            grep -n -E " error:|fatal error:|FAILED:|undefined reference" /tmp/compile.log | head -50 | while IFS= read -r line; do
+            {
+              grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log || true
+              echo "--- Last 80 lines ---"
+              tail -80 /tmp/compile.log
+            } | head -120 | while IFS= read -r line; do
               line="${line//'%'/'%25'}"
               line="${line//$'\r'/'%0D'}"
               line="${line//$'\n'/'%0A'}"
-              echo "::error title=Qt5 compile error::$line"
+              echo "::error title=Qt5 compile log::$line"
             done
             echo "## ❌ Compile Errors" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            grep -n -E " error:|fatal error:|FAILED:|undefined reference" /tmp/compile.log >> $GITHUB_STEP_SUMMARY || true
+            grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log >> $GITHUB_STEP_SUMMARY || true
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "--- Last 100 lines ---" >> $GITHUB_STEP_SUMMARY
             tail -100 /tmp/compile.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "--- Compile errors (stdout) ---"
-            grep -n -E " error:|fatal error:|FAILED:|undefined reference" /tmp/compile.log || true
+            grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log || true
             echo "--- Last 100 lines ---"
             tail -100 /tmp/compile.log
             exit $BUILD_STATUS
