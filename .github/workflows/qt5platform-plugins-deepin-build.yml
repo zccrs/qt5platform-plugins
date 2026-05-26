@@ -87,27 +87,6 @@ jobs:
           set -e
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Compile failed!"
-            {
-              grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log || true
-              echo "--- Last 80 lines ---"
-              tail -80 /tmp/compile.log
-            } | head -120 | while IFS= read -r line; do
-              line="${line//'%'/'%25'}"
-              line="${line//$'\r'/'%0D'}"
-              line="${line//$'\n'/'%0A'}"
-              echo "::error title=Qt5 compile log::$line"
-            done
-            echo "## ❌ Compile Errors" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log >> $GITHUB_STEP_SUMMARY || true
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "--- Last 100 lines ---" >> $GITHUB_STEP_SUMMARY
-            tail -100 /tmp/compile.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "--- Compile errors (stdout) ---"
-            grep -n -E " error:|Error [0-9]+|fatal error:|FAILED:|undefined reference|No rule to make target|Stop\\." /tmp/compile.log || true
-            echo "--- Last 100 lines ---"
-            tail -100 /tmp/compile.log
             echo "::warning::Early Qt5 compile probe failed; continuing to dpkg-buildpackage for the authoritative build result."
           else
             echo "✅ Qt5 XCB compile succeeded"
