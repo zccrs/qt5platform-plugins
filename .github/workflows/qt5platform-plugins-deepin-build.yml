@@ -80,6 +80,7 @@ jobs:
           echo "✅ cmake configure succeeded"
 
       - name: Test compile Qt5 XCB (catch compile errors early)
+        shell: bash
         run: |
           set +e
           set +o pipefail
@@ -104,6 +105,7 @@ jobs:
           retention-days: 7
 
       - name: Build qt5platform-plugins deb packages
+        shell: bash
         run: |
           set +e
           set +o pipefail
