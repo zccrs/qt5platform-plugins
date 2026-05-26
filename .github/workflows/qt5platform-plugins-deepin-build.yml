@@ -81,7 +81,10 @@ jobs:
 
       - name: Test compile Qt5 XCB (catch compile errors early)
         run: |
-          QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j$(nproc) 2>&1 | tee /tmp/compile.log; BUILD_STATUS=${PIPESTATUS[0]}
+          set +e
+          QT_SELECT=qt5 cmake --build /tmp/test_build5 -- -j$(nproc) 2>&1 | tee /tmp/compile.log
+          BUILD_STATUS=${PIPESTATUS[0]}
+          set -e
           if [ $BUILD_STATUS -ne 0 ]; then
             echo "❌ Compile failed!"
             {
